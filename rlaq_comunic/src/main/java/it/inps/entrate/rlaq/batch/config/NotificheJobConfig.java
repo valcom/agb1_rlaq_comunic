@@ -1,5 +1,7 @@
 package it.inps.entrate.rlaq.batch.config;
 
+import javax.sql.DataSource;
+
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -14,6 +16,7 @@ import org.springframework.batch.core.step.skip.AlwaysSkipItemSkipPolicy;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.item.database.builder.JdbcPagingItemReaderBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -24,6 +27,8 @@ import org.springframework.dao.DeadlockLoserDataAccessException;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 import it.inps.entrate.rlaq.batch.decider.StepExecutionDecider;
+import it.inps.entrate.rlaq.batch.entity.Notifica;
+import it.inps.entrate.rlaq.batch.entity.Provvedimento;
 import it.inps.entrate.rlaq.batch.item.StepDecision;
 
 @Configuration
@@ -39,27 +44,31 @@ public class NotificheJobConfig {
 	private Object logListener;
 	
 	@Value("${threadpool}")private int threadPool;
+	@Autowired
+	private DataSource dataSource;
+	@Value("${pageSize}") 
+	private Integer pageSize;
 
 	@Bean
-	public Job comunicazioniJob(JobRepository jobRepository,@Autowired Step preparazioneStep, @Autowired Step invioStep, @Autowired Step interrogazioneStep) {
+	public Job notificheJob(JobRepository jobRepository,@Autowired Step preparazioneNotProvvStep, @Autowired Step invioStep, @Autowired Step interrogazioneStep) {
 		FlowBuilder<Flow> flowBuilder = new FlowBuilder<>("notificheFlowBuilder");
-		JobExecutionDecider stepPreparazioneDecider = decider("step.preparazione.enabled");
+		JobExecutionDecider stepPreparazioneNotProvvDecider = decider("step.preparazione.notificheProvvedimenti.enabled");
 		JobExecutionDecider stepInvioDecider = decider("step.invio.enabled");
 		JobExecutionDecider stepInterrogazioneDecider = decider("step.interrogazione.enabled");
-		Flow notificheFlow = flowBuilder.start(stepPreparazioneDecider).on(StepDecision.ENABLED.name())
-				.to(preparazioneStep()).from(stepPreparazioneDecider).on(StepDecision.DISABLED.name())
-				.to(stepInvioDecider).from(preparazioneStep).next(stepInvioDecider).on(StepDecision.ENABLED.name())
+		Flow notificheFlow = flowBuilder.start(stepPreparazioneNotProvvDecider).on(StepDecision.ENABLED.name())
+				.to(preparazioneNotProvvStep()).from(stepPreparazioneNotProvvDecider).on(StepDecision.DISABLED.name())
+				.to(stepInvioDecider).from(preparazioneNotProvvStep).next(stepInvioDecider).on(StepDecision.ENABLED.name())
 				.to(invioStep).from(stepInvioDecider).on(StepDecision.DISABLED.name()).to(stepInterrogazioneDecider)
 				.from(invioStep).next(stepInterrogazioneDecider).on(StepDecision.ENABLED.name())
 				.to(interrogazioneStep).from(stepInterrogazioneDecider).on(StepDecision.DISABLED.name()).end()
 				.from(interrogazioneStep).end();
 
-		return new JobBuilder("comunicazioniJob").repository(jobRepository).listener(logListener).start(notificheFlow)
+		return new JobBuilder("notificheJob").repository(jobRepository).listener(logListener).start(notificheFlow)
 				.end().build();
 	}
 
-	private SimpleStepBuilder<String, String> commonStepBuilder() {
-		return new StepBuilder("abstractStep").transactionManager(transactionManager).<String, String>chunk(1)
+	private <I,O> SimpleStepBuilder<I, O> abstractStepBuilder() {
+		return new StepBuilder("abstractStep").transactionManager(transactionManager).<I, O>chunk(1)
 				.faultTolerant().skipPolicy(new AlwaysSkipItemSkipPolicy())
 				.retry(DeadlockLoserDataAccessException.class).retryLimit(10)
 				.taskExecutor(taskExecutor())
@@ -67,11 +76,24 @@ public class NotificheJobConfig {
 				.listener(logListener);
 	}
 	
+	private <T>JdbcPagingItemReaderBuilder<T> abstractReaderBuilder(){
+		return new JdbcPagingItemReaderBuilder<T>().dataSource(dataSource).pageSize(pageSize).saveState(false);
+	} 
+	
+//	@Bean
+//	public Step preparazioneStep() {
+//			return abstractStepBuilder()
+//					.reader(preparazioneReader())
+//					.processor(preparazioneProcessor())
+//					.writer(preparazioneWriter())
+//					.build();
+//		}
+	
 	@Bean
-	public Step preparazioneStep() {
-			return commonStepBuilder()
-					.reader(preparazioneReader())
-					.processor(preparazioneProcessor())
+	public Step preparazioneNotProvvStep() {
+			return this.<Provvedimento,Notifica>abstractStepBuilder()
+					.reader(preparazioneNotProvvReader())
+					.processor(preparazioneNotProvvProcessor())
 					.writer(preparazioneWriter())
 					.build();
 		}
@@ -80,7 +102,7 @@ public class NotificheJobConfig {
 
 	@Bean
 	public Step invioStep() {
-		return commonStepBuilder()
+		return this.<Notifica,Notifica>abstractStepBuilder()
 				.reader(invioReader())
 				.processor(invioProcessor())
 				.writer(invioWriter())
@@ -90,7 +112,7 @@ public class NotificheJobConfig {
 
 	@Bean
 	public Step interrogazioneStep() {
-		return commonStepBuilder()
+		return this.<Notifica,Notifica>abstractStepBuilder()
 				.reader(interrogazioneReader())
 				.processor(interrogazioneProcessor())
 				.writer(interrogazioneWriter())
@@ -109,47 +131,58 @@ public class NotificheJobConfig {
 		return null;
 	}
 	
+	@Bean
+	public ItemReader<Provvedimento> preparazioneNotProvvReader() {
+		return this.<Provvedimento>abstractReaderBuilder().name("preparazioneNotProvvReader").build();
+	}
 	
 	@Bean
-	public ItemWriter<? super String> preparazioneWriter() {
+	public ItemProcessor<Provvedimento, Notifica> preparazioneNotProvvProcessor() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	
+	@Bean
+	public ItemWriter<Notifica> preparazioneWriter() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 
 	@Bean
-	public ItemReader<? extends String> invioReader() {
+	public ItemReader<Notifica> invioReader() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 	
 	@Bean
-	public ItemProcessor<? super String, ? extends String> invioProcessor() {
+	public ItemProcessor<Notifica, Notifica> invioProcessor() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 	
 	
 	@Bean
-	public ItemWriter<? super String> invioWriter() {
+	public ItemWriter<Notifica> invioWriter() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 	
 	@Bean
-	public ItemReader<? extends String> interrogazioneReader() {
+	public ItemReader<Notifica> interrogazioneReader() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Bean
-	public ItemProcessor<? super String, ? extends String> interrogazioneProcessor() {
+	public ItemProcessor<Notifica, Notifica> interrogazioneProcessor() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 	
 	@Bean
-	public ItemWriter<? super String> interrogazioneWriter() {
+	public ItemWriter<Notifica> interrogazioneWriter() {
 		// TODO Auto-generated method stub
 		return null;
 	}
