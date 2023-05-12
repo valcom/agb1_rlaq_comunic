@@ -1,5 +1,9 @@
 package it.inps.entrate.rlaq.batch.config;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.sql.DataSource;
 
 import org.springframework.batch.core.Job;
@@ -16,6 +20,7 @@ import org.springframework.batch.core.step.skip.AlwaysSkipItemSkipPolicy;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.item.database.Order;
 import org.springframework.batch.item.database.builder.JdbcPagingItemReaderBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,6 +29,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.dao.DeadlockLoserDataAccessException;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 import it.inps.entrate.rlaq.batch.decider.StepExecutionDecider;
@@ -52,7 +58,7 @@ public class NotificheJobConfig {
 	@Bean
 	public Job notificheJob(JobRepository jobRepository,@Autowired Step preparazioneNotProvvStep, @Autowired Step invioStep, @Autowired Step interrogazioneStep) {
 		FlowBuilder<Flow> flowBuilder = new FlowBuilder<>("notificheFlowBuilder");
-		JobExecutionDecider stepPreparazioneNotProvvDecider = decider("step.preparazione.notificheProvvedimenti.enabled");
+		JobExecutionDecider stepPreparazioneNotProvvDecider = decider("step.preparazione.provvedimenti.enabled");
 		JobExecutionDecider stepInvioDecider = decider("step.invio.enabled");
 		JobExecutionDecider stepInterrogazioneDecider = decider("step.interrogazione.enabled");
 		Flow notificheFlow = flowBuilder.start(stepPreparazioneNotProvvDecider).on(StepDecision.ENABLED.name())
@@ -77,7 +83,7 @@ public class NotificheJobConfig {
 	}
 	
 	private <T>JdbcPagingItemReaderBuilder<T> abstractReaderBuilder(){
-		return new JdbcPagingItemReaderBuilder<T>().dataSource(dataSource).pageSize(pageSize).saveState(false);
+		return new JdbcPagingItemReaderBuilder<T>().dataSource(dataSource).pageSize(pageSize).rowMapper(new BeanPropertyRowMapper<T>()).saveState(false);
 	} 
 	
 //	@Bean
@@ -133,7 +139,15 @@ public class NotificheJobConfig {
 	
 	@Bean
 	public ItemReader<Provvedimento> preparazioneNotProvvReader() {
-		return this.<Provvedimento>abstractReaderBuilder().name("preparazioneNotProvvReader").build();
+		
+		Map<String, Object> paramValues = new HashMap<>();
+		return this.<Provvedimento>abstractReaderBuilder().name("preparazioneNotProvvReader")
+				.selectClause("")
+				.fromClause("")
+				.whereClause("")
+				.sortKeys(Collections.singletonMap("id",Order.ASCENDING))
+				.parameterValues(paramValues)
+				.build();
 	}
 	
 	@Bean
