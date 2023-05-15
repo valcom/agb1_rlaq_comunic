@@ -14,9 +14,9 @@ public class StatisticheBean implements Serializable {
 
 	private Date dataInizio;
 	private Date dataFine;
-	private int totaleElementiLetti;
-	private int totaleElementiScritti;
-	private int totaleElementiInErrore;
+	private long totaleElementiLetti;
+	private long totaleElementiScritti;
+	private long totaleElementiInErrore;
 	private String name;
 	private String templateMsg;
 
@@ -60,27 +60,27 @@ public class StatisticheBean implements Serializable {
 		return templateMsg;
 	}
 
-	public int getTotaleElementiLetti() {
+	public long getTotaleElementiLetti() {
 		return totaleElementiLetti;
 	}
 
-	public void setTotaleElementiLetti(int totaleElementiLetti) {
+	public void setTotaleElementiLetti(long totaleElementiLetti) {
 		this.totaleElementiLetti = totaleElementiLetti;
 	}
 
-	public int getTotaleElementiScritti() {
+	public long getTotaleElementiScritti() {
 		return totaleElementiScritti;
 	}
 
-	public void setTotaleElementiScritti(int totaleElementiScritti) {
+	public void setTotaleElementiScritti(long totaleElementiScritti) {
 		this.totaleElementiScritti = totaleElementiScritti;
 	}
 
-	public int getTotaleElementiInErrore() {
+	public long getTotaleElementiInErrore() {
 		return totaleElementiInErrore;
 	}
 
-	public void setTotaleElementiInErrore(int totaleElementiInErrore) {
+	public void setTotaleElementiInErrore(long totaleElementiInErrore) {
 		this.totaleElementiInErrore = totaleElementiInErrore;
 	}
 

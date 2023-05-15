@@ -17,7 +17,7 @@
 
 	<batch:step id="abstractStep" abstract="true">
 		<batch:tasklet transaction-manager="transactionManager" task-executor="taskExecutor">
-			<batch:chunk  processor-transactional="false" commit-interval="1" retry-limit="10">
+			<batch:chunk processor-transactional="false" commit-interval="1" retry-limit="5">
 				<batch:skip-policy>
 					<bean class="org.springframework.batch.core.step.skip.AlwaysSkipItemSkipPolicy" scope="step" />
 				</batch:skip-policy>
@@ -32,7 +32,13 @@
 		</batch:listeners>
 	</batch:step>
 
-	<batch:flow id="comunicazioniFlow">
+	
+	
+
+<!-- DEFINIZIONE JOB -->
+	<batch:job id="notificheJob" restartable="false" job-repository="jobRepository">
+	
+		
 		
 		<decision id="preparazioneDecision" decider="preparazioneDecider">
 	        <next on="ENABLED" to="preparazioneStep" />
@@ -57,18 +63,17 @@
 		</batch:step>
 		
 		<decision id="interrogazioneDecision" decider="interrogazioneDecider">
-	        <next on="ENABLED" to="invioStep" />
-	        <next on="DISABLED" to="interrogazioneDecision" />
+	        <next on="ENABLED" to="interrogazioneStep" />
+	        <end on="DISABLED" />
 	    </decision>
+	    
+	    <batch:step id="interrogazioneStep" parent="abstractStep">
+			<batch:tasklet>
+				<batch:chunk reader="interrogazioneReader" processor="interrogazioneProcessor" writer="interrogazioneWriter"/>
+			</batch:tasklet>
+		</batch:step>
 	
 	
-	</batch:flow>
-	
-
-<!-- DEFINIZIONE JOB -->
-	<batch:job id="comunicazioniJob" restartable="false" job-repository="jobRepository">
-	
-		
 		
 
 		<batch:listeners>
@@ -76,22 +81,8 @@
 		</batch:listeners>
 	</batch:job>
 
-	<!-- STEP INVIO COMUNICAZIONI -->
-
-	<bean id="handler4InvioComunicazioni"
-		class="org.springframework.batch.core.partition.support.TaskExecutorPartitionHandler">
-		<property name="taskExecutor" ref="taskExecutor" />
-		<property name="step" ref="invioComunicazioniStep" />
-		<property name="gridSize" value="${threadpool}" />
-	</bean>
 	
-	<batch:step id="invioComunicazioniStep" parent="abstractStep">
-		<batch:tasklet>
-			<batch:chunk reader="invioComunicazioniReader" processor="invioComunicazioniProcessor" writer="allertaComunicazioniWriter" />
-		</batch:tasklet>
-	</batch:step>
-
-	<bean id="invioComunicazioniReader" class="org.springframework.batch.item.database.JdbcPagingItemReader" scope="step">
+	<bean id="invioNotificheReader" class="org.springframework.batch.item.database.JdbcPagingItemReader" scope="step">
 		<property name="dataSource" ref="allertaDS" />
 		<property name="rowMapper">
 			<bean class="org.springframework.jdbc.core.BeanPropertyRowMapper">

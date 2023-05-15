@@ -1,5 +1,8 @@
 package it.inps.entrate.rlaq.batch.stats;
 
+import java.time.ZoneOffset;
+import java.util.Date;
+
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.stereotype.Component;
@@ -14,8 +17,8 @@ public class StatisticheFactory {
 
 		StatisticheBean statistiche = new StatisticheBean();
 		statistiche.setName(jobExecution.getJobInstance().getJobName());
-		statistiche.setDataInizio(jobExecution.getStartTime());
-		statistiche.setDataFine(jobExecution.getEndTime());
+		statistiche.setDataInizio(Date.from(jobExecution.getStartTime().toInstant(ZoneOffset.UTC)));
+		statistiche.setDataFine(Date.from(jobExecution.getEndTime().toInstant(ZoneOffset.UTC)));
 		statistiche.setTemplateMsg(TEMPLATE_JOB_MSG);
 
 		return statistiche;
@@ -25,8 +28,8 @@ public class StatisticheFactory {
 		StatisticheBean statistiche = new StatisticheBean();
 
 		statistiche.setName(stepExecution.getStepName());
-		statistiche.setDataInizio(stepExecution.getStartTime());
-		statistiche.setDataFine(stepExecution.getEndTime());
+		statistiche.setDataInizio(Date.from(stepExecution.getStartTime().toInstant(ZoneOffset.UTC)));
+		statistiche.setDataFine(Date.from(stepExecution.getEndTime().toInstant(ZoneOffset.UTC)));
 		statistiche.setTotaleElementiLetti(stepExecution.getReadCount());
 		statistiche.setTotaleElementiScritti(stepExecution.getWriteCount());
 		statistiche.setTotaleElementiInErrore(stepExecution.getSkipCount());
