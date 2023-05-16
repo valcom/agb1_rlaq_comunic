@@ -15,7 +15,7 @@ public class InvioProcessor implements ItemProcessor<Notifica, Notifica> {
 
 	@Override
 	public Notifica process(Notifica item) throws Exception {
-		throw new RuntimeException();
-	}
+return null;
+}
 
 }

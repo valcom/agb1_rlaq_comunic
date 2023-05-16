@@ -26,27 +26,33 @@ public class LogListener implements JobExecutionListener, StepExecutionListener 
 
 	@Override
 	public void beforeJob(JobExecution jobExecution) {
-		logger.info("------------ START BATCH {}  VERSIONE: {} ------------", jobExecution.getJobInstance().getJobName(),version);
-		
-
+		if(logger.isInfoEnabled()) {
+			logger.info("------------ START BATCH {}  VERSIONE: {} ------------", jobExecution.getJobInstance().getJobName(),version);
+		}
 	}
 
 	@Override
 	public void afterJob(JobExecution jobExecution) {
-		logger.info("---------- END BATCH {} VERSIONE: {} STATUS: {} ----------",
-			 jobExecution.getJobInstance().getJobName(), version, jobExecution.getExitStatus().getExitCode());
-		logger.info("---------- {}", statisticheFactory.getStatisticheJob(jobExecution));
+		if(logger.isInfoEnabled()) {
+			logger.info("---------- END BATCH {} VERSIONE: {} STATUS: {} ----------",
+				 jobExecution.getJobInstance().getJobName(), version, jobExecution.getExitStatus().getExitCode());
+			logger.info("---------- STATISTICHE\n{}",statisticheFactory.getStatisticheJob(jobExecution));
+			logger.info("---------- FINE STATISTICHE");
+		}
 	}
 
 	@Override
 	public void beforeStep(StepExecution stepExecution) {
-		logger.info("---------- START STEP {}", stepExecution.getStepName());
+		if(logger.isInfoEnabled()) {
+			logger.info("---------- START STEP {} ----------", stepExecution.getStepName());
+		}
 	}
 
 	@Override
 	public ExitStatus afterStep(StepExecution stepExecution) {
-		logger.info("---------- END STEP {} STATUS: {} ----------", stepExecution.getStepName(), stepExecution.getExitStatus().getExitCode());
-		logger.info("---------- {}", statisticheFactory.getStatisticheStep(stepExecution));
+		if(logger.isInfoEnabled()) {
+			logger.info("---------- END STEP {} STATUS: {} ----------", stepExecution.getStepName(), stepExecution.getExitStatus().getExitCode());
+		}
 		return stepExecution.getExitStatus();
 	}
 }

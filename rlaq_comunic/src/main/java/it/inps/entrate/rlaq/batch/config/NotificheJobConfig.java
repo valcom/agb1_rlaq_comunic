@@ -9,7 +9,6 @@ import javax.sql.DataSource;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
-import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.job.builder.FlowBuilder;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.job.flow.Flow;
@@ -29,7 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -46,8 +44,6 @@ import it.inps.entrate.rlaq.batch.processor.InvioProcessor;
 import it.inps.entrate.rlaq.batch.processor.PreparazioneNotificaProvvedimentoProcessor;
 
 @Configuration
-@EnableBatchProcessing
-@Import(BatchConfig.class)
 public class NotificheJobConfig {
 
 	@Autowired
@@ -96,11 +92,11 @@ public class NotificheJobConfig {
 	private <I, O> SimpleStepBuilder<I, O>abstractStepBuilder(String stepName) {
 		return new StepBuilder(stepName,jobRepository)
 				.listener(exceptionListener)
-				.listener(logListener)
-				.<I, O>chunk(1,transactionManager)
-				.faultTolerant().skipPolicy(new AlwaysSkipItemSkipPolicy()).skipLimit(2)
+				.listener(logListener).
+				<I, O>chunk(1,transactionManager)
+				.faultTolerant().skipPolicy(new AlwaysSkipItemSkipPolicy()).skipLimit(10)
 				.retry(PessimisticLockingFailureException.class).retryLimit(5)
-				.taskExecutor(taskExecutor()).transactionManager(transactionManager);
+				.taskExecutor(taskExecutor());
 	}
 	
 	private <T>JdbcPagingItemReaderBuilder<T> abstractReaderBuilder(){
@@ -171,10 +167,10 @@ public class NotificheJobConfig {
 		paramValues.put("minData", new Date());
 		return this.<Provvedimento>abstractReaderBuilder().name("preparazioneNotProvvReader")
 				.beanRowMapper(Provvedimento.class)
-				.selectClause("SELECT id_provvedimento idProvvedimento,d.id_domanda idDomanda,a.codice_fiscale cfAzienda")
-				.fromClause(dbSchema+".TBProvvedimento p JOIN "+dbSchema+".TbDomanda d on p.id_domanda = d.id_domanda JOIN "+dbSchema+".TbAzienda a on a.id_azienda = d.id_azienda")
-				.whereClause("p.data_inserimento > :minData")
-				.sortKeys(Collections.singletonMap("idProvvedimento",Order.ASCENDING))
+				.selectClause("SELECT id_provvedimento, p.id_provvedimento idProvvedimento,d.id_domanda idDomanda,a.codice_fiscale cfAzienda")
+				.fromClause("FROM "+dbSchema+".TBProvvedimento p JOIN "+dbSchema+".TbDomanda d on p.id_domanda = d.id_domanda JOIN "+dbSchema+".TbAzienda a on a.id_azienda = d.id_azienda")
+				.whereClause("WHERE d.data_inserimento < :minData")
+				.sortKeys(Collections.singletonMap("id_provvedimento",Order.ASCENDING))
 				.parameterValues(paramValues)
 				.build();
 	}
@@ -199,10 +195,10 @@ public class NotificheJobConfig {
 		paramValues.put("minData", new Date());
 		return this.<Notifica>abstractReaderBuilder().name("invioReader")
 				.beanRowMapper(Notifica.class)
-				.selectClause("SELECT id_provvedimento idProvvedimento,d.id_domanda idDomanda,a.codice_fiscale cfAzienda")
-				.fromClause(dbSchema+".TBProvvedimento p JOIN "+dbSchema+".TbDomanda d on p.id_domanda = d.id_domanda JOIN "+dbSchema+".TbAzienda a on a.id_azienda = d.id_azienda")
-				.whereClause("p.data_inserimento > :minData")
-				.sortKeys(Collections.singletonMap("idProvvedimento",Order.ASCENDING))
+				.selectClause("SELECT id_provvedimento, p.id_provvedimento idProvvedimento,d.id_domanda idDomanda,a.codice_fiscale cfAzienda")
+				.fromClause("FROM "+dbSchema+".TBProvvedimento p JOIN "+dbSchema+".TbDomanda d on p.id_domanda = d.id_domanda JOIN "+dbSchema+".TbAzienda a on a.id_azienda = d.id_azienda")
+				.whereClause("WHERE d.data_inserimento < :minData")
+				.sortKeys(Collections.singletonMap("id_provvedimento",Order.ASCENDING))
 				.parameterValues(paramValues)
 				.build();
 	}

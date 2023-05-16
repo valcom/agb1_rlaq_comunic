@@ -20,6 +20,7 @@ public class StatisticheFactory {
 		statistiche.setDataInizio(Date.from(jobExecution.getStartTime().toInstant(ZoneOffset.UTC)));
 		statistiche.setDataFine(Date.from(jobExecution.getEndTime().toInstant(ZoneOffset.UTC)));
 		statistiche.setTemplateMsg(TEMPLATE_JOB_MSG);
+		statistiche.setStatisticheStep(jobExecution.getStepExecutions().stream().map(this::getStatisticheStep).toList());
 
 		return statistiche;
 	}

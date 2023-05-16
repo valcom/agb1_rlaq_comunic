@@ -1,6 +1,7 @@
 package it.inps.entrate.rlaq.batch.stats;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Date;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -19,6 +20,16 @@ public class StatisticheBean implements Serializable {
 	private long totaleElementiInErrore;
 	private String name;
 	private String templateMsg;
+	
+	private Collection<StatisticheBean> statisticheStep;
+
+	public Collection<StatisticheBean> getStatisticheStep() {
+		return statisticheStep;
+	}
+
+	public void setStatisticheStep(Collection<StatisticheBean> statisticheStep) {
+		this.statisticheStep = statisticheStep;
+	}
 
 	public void setTemplateMsg(String template) {
 		this.templateMsg = template;
@@ -53,7 +64,11 @@ public class StatisticheBean implements Serializable {
 		long dataInizioMillis = dataInizio.getTime();
 		long dataFineMillis = dataFine != null ? dataFine.getTime() : System.currentTimeMillis();
 		String timeExec = DurationFormatUtils.formatDuration(dataFineMillis - dataInizioMillis, "HH:mm:ss");
-		return String.format(templateMsg, name, timeExec, getTotaleElementiLetti(), getTotaleElementiScritti(), getTotaleElementiInErrore());
+		StringBuilder sb = new StringBuilder(String.format(templateMsg, name, timeExec, getTotaleElementiLetti(), getTotaleElementiScritti(), getTotaleElementiInErrore()));
+		if(statisticheStep!= null) {
+			statisticheStep.forEach(stat->sb.append("\n").append(stat.toString()));
+		}
+		return sb.toString();
 	}
 
 	public String getTemplateMsg() {
