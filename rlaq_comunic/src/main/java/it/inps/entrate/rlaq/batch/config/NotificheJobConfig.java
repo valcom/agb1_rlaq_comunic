@@ -29,9 +29,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.dao.PessimisticLockingFailureException;
 
 import it.inps.entrate.rlaq.batch.decider.StepExecutionDecider;
 import it.inps.entrate.rlaq.batch.entity.Notifica;
@@ -48,7 +48,6 @@ public class NotificheJobConfig {
 
 	@Autowired
 	private PlatformTransactionManager transactionManager;
-	
 	
 	@Autowired
 	private ExceptionListener<?,?> exceptionListener;
