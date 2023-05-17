@@ -9,12 +9,10 @@ import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
 import it.inps.entrate.rlaq.batch.stats.StatisticheFactory;
 
 
-@Component
 public class LogListener implements JobExecutionListener, StepExecutionListener {
 	private static final Logger logger = LoggerFactory.getLogger(LogListener.class);
 	

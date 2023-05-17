@@ -26,8 +26,10 @@ import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilde
 import org.springframework.batch.item.database.builder.JdbcPagingItemReaderBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -49,13 +51,6 @@ public class NotificheJobConfig {
 	@Autowired
 	private PlatformTransactionManager transactionManager;
 	
-	@Autowired
-	private ExceptionListener<?,?> exceptionListener;
-	@Autowired
-	private LogListener logListener;
-	
-	@Value("${threadpool}")
-	private int threadPool;
 	@Autowired
 	private DataSource dataSource;
 	
@@ -84,14 +79,25 @@ public class NotificheJobConfig {
 		
 		
 
-		return new JobBuilder("notificheJob",jobRepository).listener(logListener).preventRestart().start(notificheFlow)
+		return new JobBuilder("notificheJob",jobRepository).listener(logListener()).preventRestart().start(notificheFlow)
 				.end().build();
 	}
+	
+	@Bean
+	public <I,O> ExceptionListener<I,O> exceptionListener(){
+		return new ExceptionListener<>();
+	}
 
+	@Bean
+	public LogListener logListener() {
+		return new LogListener();
+	}
+	
+	
 	private <I, O> SimpleStepBuilder<I, O>abstractStepBuilder(String stepName) {
 		return new StepBuilder(stepName,jobRepository)
-				.listener(exceptionListener)
-				.listener(logListener).
+				.listener(exceptionListener())
+				.listener(logListener()).
 				<I, O>chunk(1,transactionManager)
 				.faultTolerant().skipPolicy(new AlwaysSkipItemSkipPolicy()).skipLimit(10)
 				.retry(PessimisticLockingFailureException.class).retryLimit(5)
@@ -147,17 +153,7 @@ public class NotificheJobConfig {
 				.build();
 	}
 	
-	@Bean
-	public ItemReader<? extends String> preparazioneReader() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 	
-	@Bean
-	public ItemProcessor<? super String, ? extends String> preparazioneProcessor() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 	
 	@Bean
 	public ItemReader<Provvedimento> preparazioneNotProvvReader() {
@@ -235,7 +231,8 @@ public class NotificheJobConfig {
 
 	
 
-
+	@Bean
+	@Scope("prototype")
 	public JobExecutionDecider decider(String property) {
 		StepExecutionDecider decider = new StepExecutionDecider();
 		decider.setProperty(property);
@@ -243,11 +240,10 @@ public class NotificheJobConfig {
 	}
 	
 	@Bean
+	@ConfigurationProperties(prefix = "task-executor")
 	public TaskExecutor taskExecutor() {
 		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor(); 
 		taskExecutor.setBeanName("taskExcecutor");
-		taskExecutor.setCorePoolSize(threadPool);
-		taskExecutor.setMaxPoolSize(threadPool);
 		return taskExecutor;
 	}
 

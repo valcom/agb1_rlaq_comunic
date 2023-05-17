@@ -2,9 +2,7 @@ package it.inps.entrate.rlaq.batch.stats;
 
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.StepExecution;
-import org.springframework.stereotype.Component;
 
-@Component
 public class StatisticheFactory {
 
 	public StatisticheJobBean getStatisticheJob(JobExecution jobExecution) {

@@ -9,6 +9,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
+import it.inps.entrate.rlaq.batch.stats.StatisticheFactory;
+
 @Configuration
 public class BatchConfig{
 	
@@ -28,8 +30,10 @@ public class BatchConfig{
 	}
 	
 	
-	
-	
+	@Bean
+	public StatisticheFactory statisticheFactory() {
+		return new StatisticheFactory();
+	}
 	
 	
 
