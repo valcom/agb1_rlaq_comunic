@@ -8,9 +8,8 @@
   <artifactId>rlaq_comunic</artifactId>
   
   <properties>
-	  <srcContainer>rlaq_comunic</srcContainer>
-	<staticContainer>${project.parent}/ag_rlaq_comunic</staticContainer>
-	<baseDirectory>${project.parent.basedir}</baseDirectory>
+	<destFileName>${project.artifactId}</destFileName>
+	<outputDirectory>../ag_rlaq_comunic</outputDirectory>
   </properties>
   
   <dependencies>
@@ -54,30 +53,43 @@
   </dependencies>
   
   <build>
-	 <plugins>
-		 
-			<plugin>
-				<artifactId>maven-assembly-plugin</artifactId>
+	  <resources>
+        <resource>
+            <directory>src/main/resources</directory>
+            <excludes>
+                <exclude>*.properties</exclude>
+            </excludes>
+            <filtering>false</filtering>
+        </resource>
+    </resources>
+ <plugins>
 
-				<configuration>
-					<descriptors>
-						 <descriptor>${project.basedir}/src/main/resources/assembly.xml</descriptor>
-					</descriptors>
-					<outputDirectory>${project.parent.basedir}</outputDirectory>
-					<finalName>ag_rlaq_comunic</finalName>
-					<appendAssemblyId>false</appendAssemblyId>	
-					<attach>false</attach>				
-				</configuration>
-				<executions>
-					<execution>
-						<id>create-archive</id>
-						<phase>package</phase>
-						<goals>
-							<goal>single</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+  <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-installed</id>
+            <phase>install</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>${project.groupId}</groupId>
+                  <artifactId>${project.artifactId}</artifactId>
+                  <version>${project.version}</version>
+                  <type>${project.packaging}</type>
+                  <destFileName>${destFileName}</destFileName>
+                </artifactItem>
+              </artifactItems>
+              <outputDirectory>${outputDirectory}</outputDirectory>
+              <overWriteIfNewer>true</overWriteIfNewer>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
 	 </plugins>
 	 
  </build>
