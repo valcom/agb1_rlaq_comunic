@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema elementFormDefault="qualified" targetNamespace="http://schemas.datacontract.org/2004/07/WSIcona20CLL.PUCEntities" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://schemas.datacontract.org/2004/07/WSIcona20CLL.PUCEntities" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:wsam="http://www.w3.org/2007/05/addressing/metadata" xmlns:wsx="http://schemas.xmlsoap.org/ws/2004/09/mex" xmlns:wsap="http://schemas.xmlsoap.org/ws/2004/08/addressing/policy" xmlns:msc="http://schemas.microsoft.com/ws/2005/12/wsdl/contract" xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:wsa10="http://www.w3.org/2005/08/addressing" xmlns:wsaw="http://www.w3.org/2006/05/addressing/wsdl" xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/08/addressing">
+  <xs:import schemaLocation="WSIcona.xsd3.xsd" namespace="http://soa.inps.it/WS01317/data"/>
+  <xs:complexType name="ArrayOfPUC_DettaglioAttoOpponibile">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="PUC_DettaglioAttoOpponibile" nillable="true" type="tns:PUC_DettaglioAttoOpponibile"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="ArrayOfPUC_DettaglioAttoOpponibile" nillable="true" type="tns:ArrayOfPUC_DettaglioAttoOpponibile"/>
+  <xs:complexType name="PUC_DettaglioAttoOpponibile">
+    <xs:complexContent mixed="false">
+      <xs:extension base="q1:PUC_AttoOpponibile" xmlns:q1="http://soa.inps.it/WS01317/data">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="data" nillable="true" type="xs:string"/>
+          <xs:element minOccurs="0" name="idStatoNotifica" nillable="true" type="xs:string"/>
+          <xs:element minOccurs="0" name="stato" nillable="true" type="xs:string"/>
+          <xs:element minOccurs="0" name="statoAggregato" nillable="true" type="xs:string"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name="PUC_DettaglioAttoOpponibile" nillable="true" type="tns:PUC_DettaglioAttoOpponibile"/>
+  <xs:complexType name="PUC_DettaglioAttoOpponibileExt">
+    <xs:complexContent mixed="false">
+      <xs:extension base="tns:PUC_DettaglioAttoOpponibile">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="base64" nillable="true" type="xs:string"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name="PUC_DettaglioAttoOpponibileExt" nillable="true" type="tns:PUC_DettaglioAttoOpponibileExt"/>
+  <xs:complexType name="PUC_NotificaDestinatario">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="cfDestinatario" nillable="true" type="xs:string"/>
+      <xs:element minOccurs="0" name="dettaglio" nillable="true" type="q2:ArrayOfDataItem" xmlns:q2="http://soa.inps.it/WS01317/data"/>
+      <xs:element minOccurs="0" name="domicilioDigitale" nillable="true" type="q3:PUC_DomicilioDigitale" xmlns:q3="http://soa.inps.it/WS01317/data"/>
+      <xs:element minOccurs="0" name="indirizzoFisico" nillable="true" type="q4:PUC_IndirizzoFisico" xmlns:q4="http://soa.inps.it/WS01317/data"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="PUC_NotificaDestinatario" nillable="true" type="tns:PUC_NotificaDestinatario"/>
+  <xs:complexType name="ArrayOfPUC_AttoNotfica">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="PUC_AttoNotfica" nillable="true" type="tns:PUC_AttoNotfica"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="ArrayOfPUC_AttoNotfica" nillable="true" type="tns:ArrayOfPUC_AttoNotfica"/>
+  <xs:complexType name="PUC_AttoNotfica">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="atto" nillable="true" type="q5:PUC_AttoOpponibileExt" xmlns:q5="http://soa.inps.it/WS01317/data"/>
+      <xs:element minOccurs="0" name="stato" nillable="true" type="q6:PUC_StatoNotifica" xmlns:q6="http://soa.inps.it/WS01317/data"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="PUC_AttoNotfica" nillable="true" type="tns:PUC_AttoNotfica"/>
+</xs:schema>
