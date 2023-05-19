@@ -1,4 +1,4 @@
-package it.inps.entrate.rlaq.batch.config;
+package it.inps.entrate.rlaq.batch;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -1,8 +1,5 @@
 package it.inps.entrate.rlaq.batch.config;
 
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 
 import javax.sql.DataSource;
@@ -38,7 +35,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import it.inps.entrate.rlaq.batch.decider.StepExecutionDecider;
 import it.inps.entrate.rlaq.batch.entity.Notifica;
 import it.inps.entrate.rlaq.batch.entity.Provvedimento;
-import it.inps.entrate.rlaq.batch.item.StepDecision;
+import it.inps.entrate.rlaq.batch.decider.StepExecutionDecider.StepDecision;
 import it.inps.entrate.rlaq.batch.listener.ExceptionListener;
 import it.inps.entrate.rlaq.batch.listener.LogListener;
 import it.inps.entrate.rlaq.batch.processor.InterrogazioneProcessor;
@@ -62,12 +59,15 @@ public class NotificheJobConfig {
 	
 	@Value("${db.schema}")
 	private String dbSchema;
+	
+	@Value("#{configRepository.findValoreByChiave('job-notifiche.step-preparazione-provvedimenti.data-inizio')}")
+	private String dataMinNotProvv;
 
 	@Bean
 	public Job notificheJob() {
-		JobExecutionDecider stepPreparazioneNotProvvDecider = decider("step.preparazione.provvedimenti.enabled");
-		JobExecutionDecider stepInvioDecider = decider("step.invio.enabled");
-		JobExecutionDecider stepInterrogazioneDecider = decider("step.interrogazione.enabled");
+		JobExecutionDecider stepPreparazioneNotProvvDecider = decider("job-notifiche.step-preparazione-provvedimenti.enabled");
+		JobExecutionDecider stepInvioDecider = decider("job-notifiche.step-invio.enabled");
+		JobExecutionDecider stepInterrogazioneDecider = decider("job-notifiche.step-interrogazione.enabled");
 		Flow notificheFlow = new FlowBuilder<Flow>("notificheFlowBuilder").start(stepPreparazioneNotProvvDecider)
 				.on(StepDecision.ENABLED.name()).to(preparazioneNotProvvStep()).next(stepInvioDecider)
 				.on(StepDecision.ENABLED.name()).to(invioStep()).next(stepInterrogazioneDecider)
@@ -94,7 +94,7 @@ public class NotificheJobConfig {
 	}
 	
 	
-	private <I, O> SimpleStepBuilder<I, O>abstractStepBuilder(String stepName) {
+	private <I, O> SimpleStepBuilder<I, O>stepBuilder(String stepName) {
 		return new StepBuilder(stepName,jobRepository)
 				.listener(exceptionListener())
 				.listener(logListener()).
@@ -104,11 +104,11 @@ public class NotificheJobConfig {
 				.taskExecutor(taskExecutor());
 	}
 	
-	private <T>JdbcPagingItemReaderBuilder<T> abstractReaderBuilder(){
+	private <T>JdbcPagingItemReaderBuilder<T> readerBuilder(){
 		return new JdbcPagingItemReaderBuilder<T>().dataSource(dataSource).pageSize(pageSize).saveState(false);
 	} 
 	
-	private <T> JdbcBatchItemWriterBuilder<T> abstractWriterBuilder() {
+	private <T> JdbcBatchItemWriterBuilder<T> writerBuilder() {
 		return new JdbcBatchItemWriterBuilder<T>().dataSource(dataSource).itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>());
 		
 	}
@@ -125,7 +125,7 @@ public class NotificheJobConfig {
 	
 	@Bean
 	public Step preparazioneNotProvvStep() {
-			return this.<Provvedimento,Notifica>abstractStepBuilder("preparazioneNotProvvStep")
+			return this.<Provvedimento,Notifica>stepBuilder("preparazioneNotProvvStep")
 					.reader(preparazioneNotProvvReader())
 					.processor(preparazioneNotProvvProcessor())
 					.writer(preparazioneWriter())
@@ -136,7 +136,7 @@ public class NotificheJobConfig {
 
 	@Bean
 	public Step invioStep() {
-		return this.<Notifica,Notifica>abstractStepBuilder("invioStep")
+		return this.<Notifica,Notifica>stepBuilder("invioStep")
 				.reader(invioReader())
 				.processor(invioProcessor())
 				.writer(invioWriter())
@@ -146,7 +146,7 @@ public class NotificheJobConfig {
 
 	@Bean
 	public Step interrogazioneStep() {
-		return this.<Notifica,Notifica>abstractStepBuilder("interrogazioneStep")
+		return this.<Notifica,Notifica>stepBuilder("interrogazioneStep")
 				.reader(interrogazioneReader())
 				.processor(interrogazioneProcessor())
 				.writer(interrogazioneWriter())
@@ -158,15 +158,13 @@ public class NotificheJobConfig {
 	@Bean
 	public ItemReader<Provvedimento> preparazioneNotProvvReader() {
 		
-		Map<String, Object> paramValues = new HashMap<>();
-		paramValues.put("minData", new Date());
-		return this.<Provvedimento>abstractReaderBuilder().name("preparazioneNotProvvReader")
+		return this.<Provvedimento>readerBuilder().name("preparazioneNotProvvReader")
 				.beanRowMapper(Provvedimento.class)
 				.selectClause("SELECT id_provvedimento, p.id_provvedimento idProvvedimento,d.id_domanda idDomanda,a.codice_fiscale cfAzienda")
 				.fromClause("FROM "+dbSchema+".TBProvvedimento p JOIN "+dbSchema+".TbDomanda d on p.id_domanda = d.id_domanda JOIN "+dbSchema+".TbAzienda a on a.id_azienda = d.id_azienda")
-				.whereClause("WHERE d.data_inserimento < :minData")
-				.sortKeys(Collections.singletonMap("id_provvedimento",Order.ASCENDING))
-				.parameterValues(paramValues)
+				.whereClause("WHERE d.data_inserimento > :dataStart")
+				.sortKeys(Map.of("id_provvedimento", Order.ASCENDING))
+				.parameterValues(Map.of("dataStart", dataMinNotProvv))
 				.build();
 	}
 	
@@ -180,21 +178,19 @@ public class NotificheJobConfig {
 	public ItemWriter<Notifica> preparazioneWriter() {
 		// TODO Auto-generated method stub
 		String sql = "INSERT INTO"+dbSchema+".TBPecEnte(id_pec_ente,id_ente) VALUES(:idNotifica,3)";
-		return this.<Notifica>abstractWriterBuilder().sql(sql).build();
+		return this.<Notifica>writerBuilder().sql(sql).build();
 	}
 
 
 	@Bean
 	public ItemReader<Notifica> invioReader() {
-		Map<String, Object> paramValues = new HashMap<>();
-		paramValues.put("minData", new Date());
-		return this.<Notifica>abstractReaderBuilder().name("invioReader")
+		return this.<Notifica>readerBuilder().name("invioReader")
 				.beanRowMapper(Notifica.class)
 				.selectClause("SELECT id_provvedimento, p.id_provvedimento idProvvedimento,d.id_domanda idDomanda,a.codice_fiscale cfAzienda")
 				.fromClause("FROM "+dbSchema+".TBProvvedimento p JOIN "+dbSchema+".TbDomanda d on p.id_domanda = d.id_domanda JOIN "+dbSchema+".TbAzienda a on a.id_azienda = d.id_azienda")
-				.whereClause("WHERE d.data_inserimento < :minData")
-				.sortKeys(Collections.singletonMap("id_provvedimento",Order.ASCENDING))
-				.parameterValues(paramValues)
+				.whereClause("WHERE d.data_inserimento > :dataStart")
+				.sortKeys(Map.of("id_provvedimento", Order.ASCENDING))
+				.parameterValues(Map.of("dataStart", dataMinNotProvv))
 				.build();
 	}
 	
