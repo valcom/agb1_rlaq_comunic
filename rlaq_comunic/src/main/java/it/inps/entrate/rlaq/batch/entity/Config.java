@@ -1,11 +1,11 @@
 package it.inps.entrate.rlaq.batch.entity;
 
 public class Config {
-	
+
 	private Long id;
-	
+
 	private String chiave;
-	
+
 	private String valore;
 
 	public Long getId() {

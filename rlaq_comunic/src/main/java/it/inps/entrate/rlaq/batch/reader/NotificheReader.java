@@ -8,8 +8,7 @@ import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemStream;
 
 public class NotificheReader<T> implements ItemReader<T> {
-	
-	
+
 	public NotificheReader() {
 		super();
 	}
@@ -46,7 +45,7 @@ public class NotificheReader<T> implements ItemReader<T> {
 	@BeforeStep
 	public void beforeStep(StepExecution stepExecution) {
 		if (delegate instanceof ItemStream d) {
-			 d.open(stepExecution.getExecutionContext());
+			d.open(stepExecution.getExecutionContext());
 		}
 	}
 }

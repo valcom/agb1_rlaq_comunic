@@ -33,9 +33,9 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import it.inps.entrate.rlaq.batch.decider.StepExecutionDecider;
+import it.inps.entrate.rlaq.batch.decider.StepExecutionDecider.StepDecision;
 import it.inps.entrate.rlaq.batch.entity.Notifica;
 import it.inps.entrate.rlaq.batch.entity.Provvedimento;
-import it.inps.entrate.rlaq.batch.decider.StepExecutionDecider.StepDecision;
 import it.inps.entrate.rlaq.batch.listener.ExceptionListener;
 import it.inps.entrate.rlaq.batch.listener.LogListener;
 import it.inps.entrate.rlaq.batch.processor.InterrogazioneProcessor;
@@ -47,44 +47,41 @@ public class NotificheJobConfig {
 
 	@Autowired
 	private PlatformTransactionManager transactionManager;
-	
+
 	@Autowired
 	private DataSource dataSource;
-	
-	@Autowired 
+
+	@Autowired
 	private JobRepository jobRepository;
-	
-	@Value("${pageSize}") 
+
+	@Value("${pageSize}")
 	private Integer pageSize;
-	
+
 	@Value("${db.schema}")
 	private String dbSchema;
-	
+
 	@Value("#{configRepository.findValoreByChiave('job-notifiche.step-preparazione-provvedimenti.data-inizio')}")
 	private String dataMinNotProvv;
 
 	@Bean
 	public Job notificheJob() {
-		JobExecutionDecider stepPreparazioneNotProvvDecider = decider("job-notifiche.step-preparazione-provvedimenti.enabled");
+		JobExecutionDecider stepPreparazioneNotProvvDecider = decider(
+				"job-notifiche.step-preparazione-provvedimenti.enabled");
 		JobExecutionDecider stepInvioDecider = decider("job-notifiche.step-invio.enabled");
 		JobExecutionDecider stepInterrogazioneDecider = decider("job-notifiche.step-interrogazione.enabled");
 		Flow notificheFlow = new FlowBuilder<Flow>("notificheFlowBuilder").start(stepPreparazioneNotProvvDecider)
 				.on(StepDecision.ENABLED.name()).to(preparazioneNotProvvStep()).next(stepInvioDecider)
 				.on(StepDecision.ENABLED.name()).to(invioStep()).next(stepInterrogazioneDecider)
-				.on(StepDecision.ENABLED.name()).to(interrogazioneStep())
-				.from(stepPreparazioneNotProvvDecider)
-				.on(StepDecision.DISABLED.name()).to(stepInvioDecider)
-				.on(StepDecision.DISABLED.name()).to(stepInterrogazioneDecider)
-				.on(StepDecision.DISABLED.name()).end().build();
-		
-		
+				.on(StepDecision.ENABLED.name()).to(interrogazioneStep()).from(stepPreparazioneNotProvvDecider)
+				.on(StepDecision.DISABLED.name()).to(stepInvioDecider).on(StepDecision.DISABLED.name())
+				.to(stepInterrogazioneDecider).on(StepDecision.DISABLED.name()).end().build();
 
-		return new JobBuilder("notificheJob",jobRepository).listener(logListener()).preventRestart().start(notificheFlow)
-				.end().build();
+		return new JobBuilder("notificheJob", jobRepository).listener(logListener()).preventRestart()
+				.start(notificheFlow).end().build();
 	}
-	
+
 	@Bean
-	public <I,O> ExceptionListener<I,O> exceptionListener(){
+	public <I, O> ExceptionListener<I, O> exceptionListener() {
 		return new ExceptionListener<>();
 	}
 
@@ -92,28 +89,24 @@ public class NotificheJobConfig {
 	public LogListener logListener() {
 		return new LogListener();
 	}
-	
-	
-	private <I, O> SimpleStepBuilder<I, O>stepBuilder(String stepName) {
-		return new StepBuilder(stepName,jobRepository)
-				.listener(exceptionListener())
-				.listener(logListener()).
-				<I, O>chunk(1,transactionManager)
-				.faultTolerant().skipPolicy(new AlwaysSkipItemSkipPolicy()).skipLimit(10)
-				.retry(PessimisticLockingFailureException.class).retryLimit(5)
+
+	private <I, O> SimpleStepBuilder<I, O> stepBuilder(String stepName) {
+		return new StepBuilder(stepName, jobRepository).listener(exceptionListener()).listener(logListener())
+				.<I, O>chunk(1, transactionManager).faultTolerant().skipPolicy(new AlwaysSkipItemSkipPolicy())
+				.skipLimit(10).retry(PessimisticLockingFailureException.class).retryLimit(5)
 				.taskExecutor(taskExecutor());
 	}
-	
-	private <T>JdbcPagingItemReaderBuilder<T> readerBuilder(){
+
+	private <T> JdbcPagingItemReaderBuilder<T> readerBuilder() {
 		return new JdbcPagingItemReaderBuilder<T>().dataSource(dataSource).pageSize(pageSize).saveState(false);
-	} 
-	
-	private <T> JdbcBatchItemWriterBuilder<T> writerBuilder() {
-		return new JdbcBatchItemWriterBuilder<T>().dataSource(dataSource).itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>());
-		
 	}
-	
-	
+
+	private <T> JdbcBatchItemWriterBuilder<T> writerBuilder() {
+		return new JdbcBatchItemWriterBuilder<T>().dataSource(dataSource)
+				.itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>());
+
+	}
+
 //	@Bean
 //	public Step preparazioneStep() {
 //			return abstractStepBuilder()
@@ -122,91 +115,76 @@ public class NotificheJobConfig {
 //					.writer(preparazioneWriter())
 //					.build();
 //		}
-	
+
 	@Bean
 	public Step preparazioneNotProvvStep() {
-			return this.<Provvedimento,Notifica>stepBuilder("preparazioneNotProvvStep")
-					.reader(preparazioneNotProvvReader())
-					.processor(preparazioneNotProvvProcessor())
-					.writer(preparazioneWriter())
-					.build();
-		}
-	
-	
+		return this.<Provvedimento, Notifica>stepBuilder("preparazioneNotProvvStep")
+				.reader(preparazioneNotProvvReader()).processor(preparazioneNotProvvProcessor())
+				.writer(preparazioneWriter()).build();
+	}
 
 	@Bean
 	public Step invioStep() {
-		return this.<Notifica,Notifica>stepBuilder("invioStep")
-				.reader(invioReader())
-				.processor(invioProcessor())
-				.writer(invioWriter())
-				.build();
+		return this.<Notifica, Notifica>stepBuilder("invioStep").reader(invioReader()).processor(invioProcessor())
+				.writer(invioWriter()).build();
 	}
-	
 
 	@Bean
 	public Step interrogazioneStep() {
-		return this.<Notifica,Notifica>stepBuilder("interrogazioneStep")
-				.reader(interrogazioneReader())
-				.processor(interrogazioneProcessor())
-				.writer(interrogazioneWriter())
-				.build();
+		return this.<Notifica, Notifica>stepBuilder("interrogazioneStep").reader(interrogazioneReader())
+				.processor(interrogazioneProcessor()).writer(interrogazioneWriter()).build();
 	}
-	
-	
-	
+
 	@Bean
 	public ItemReader<Provvedimento> preparazioneNotProvvReader() {
-		
-		return this.<Provvedimento>readerBuilder().name("preparazioneNotProvvReader")
-				.beanRowMapper(Provvedimento.class)
-				.selectClause("SELECT id_provvedimento, p.id_provvedimento idProvvedimento,d.id_domanda idDomanda,a.codice_fiscale cfAzienda")
-				.fromClause("FROM "+dbSchema+".TBProvvedimento p JOIN "+dbSchema+".TbDomanda d on p.id_domanda = d.id_domanda JOIN "+dbSchema+".TbAzienda a on a.id_azienda = d.id_azienda")
+
+		return this.<Provvedimento>readerBuilder().name("preparazioneNotProvvReader").beanRowMapper(Provvedimento.class)
+				.selectClause(
+						"SELECT id_provvedimento, p.id_provvedimento idProvvedimento,d.id_domanda idDomanda,a.codice_fiscale cfAzienda")
+				.fromClause("FROM " + dbSchema + ".TBProvvedimento p JOIN " + dbSchema
+						+ ".TbDomanda d on p.id_domanda = d.id_domanda JOIN " + dbSchema
+						+ ".TbAzienda a on a.id_azienda = d.id_azienda")
 				.whereClause("WHERE d.data_inserimento > :dataStart")
 				.sortKeys(Map.of("id_provvedimento", Order.ASCENDING))
-				.parameterValues(Map.of("dataStart", dataMinNotProvv))
-				.build();
+				.parameterValues(Map.of("dataStart", dataMinNotProvv)).build();
 	}
-	
+
 	@Bean
 	public ItemProcessor<Provvedimento, Notifica> preparazioneNotProvvProcessor() {
 		return new PreparazioneNotificaProvvedimentoProcessor();
 	}
-	
-	
+
 	@Bean
 	public ItemWriter<Notifica> preparazioneWriter() {
 		// TODO Auto-generated method stub
-		String sql = "INSERT INTO"+dbSchema+".TBPecEnte(id_pec_ente,id_ente) VALUES(:idNotifica,3)";
+		String sql = "INSERT INTO" + dbSchema + ".TBPecEnte(id_pec_ente,id_ente) VALUES(:idNotifica,3)";
 		return this.<Notifica>writerBuilder().sql(sql).build();
 	}
 
-
 	@Bean
 	public ItemReader<Notifica> invioReader() {
-		return this.<Notifica>readerBuilder().name("invioReader")
-				.beanRowMapper(Notifica.class)
-				.selectClause("SELECT id_provvedimento, p.id_provvedimento idProvvedimento,d.id_domanda idDomanda,a.codice_fiscale cfAzienda")
-				.fromClause("FROM "+dbSchema+".TBProvvedimento p JOIN "+dbSchema+".TbDomanda d on p.id_domanda = d.id_domanda JOIN "+dbSchema+".TbAzienda a on a.id_azienda = d.id_azienda")
+		return this.<Notifica>readerBuilder().name("invioReader").beanRowMapper(Notifica.class).selectClause(
+				"SELECT id_provvedimento, p.id_provvedimento idProvvedimento,d.id_domanda idDomanda,a.codice_fiscale cfAzienda")
+				.fromClause("FROM " + dbSchema + ".TBProvvedimento p JOIN " + dbSchema
+						+ ".TbDomanda d on p.id_domanda = d.id_domanda JOIN " + dbSchema
+						+ ".TbAzienda a on a.id_azienda = d.id_azienda")
 				.whereClause("WHERE d.data_inserimento > :dataStart")
 				.sortKeys(Map.of("id_provvedimento", Order.ASCENDING))
-				.parameterValues(Map.of("dataStart", dataMinNotProvv))
-				.build();
+				.parameterValues(Map.of("dataStart", dataMinNotProvv)).build();
 	}
-	
+
 	@Bean
 	public ItemProcessor<Notifica, Notifica> invioProcessor() {
 		// TODO Auto-generated method stub
 		return new InvioProcessor();
 	}
-	
-	
+
 	@Bean
 	public ItemWriter<Notifica> invioWriter() {
 		// TODO Auto-generated method stub
 		return preparazioneWriter();
 	}
-	
+
 	@Bean
 	public ItemReader<Notifica> interrogazioneReader() {
 		// TODO Auto-generated method stub
@@ -218,14 +196,12 @@ public class NotificheJobConfig {
 		// TODO Auto-generated method stub
 		return new InterrogazioneProcessor();
 	}
-	
+
 	@Bean
 	public ItemWriter<Notifica> interrogazioneWriter() {
 		// TODO Auto-generated method stub
 		return preparazioneWriter();
 	}
-
-	
 
 	@Bean
 	@Scope("prototype")
@@ -234,11 +210,11 @@ public class NotificheJobConfig {
 		decider.setProperty(property);
 		return decider;
 	}
-	
+
 	@Bean
 	@ConfigurationProperties(prefix = "task-executor")
 	public TaskExecutor taskExecutor() {
-		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor(); 
+		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
 		taskExecutor.setBeanName("taskExcecutor");
 		return taskExecutor;
 	}

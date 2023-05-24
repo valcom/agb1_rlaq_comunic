@@ -12,29 +12,25 @@ import org.springframework.context.annotation.Primary;
 import it.inps.entrate.rlaq.batch.stats.StatisticheFactory;
 
 @Configuration
-public class BatchConfig{
-	
-	
+public class BatchConfig {
+
 	@Bean
 	@Primary
 	@ConfigurationProperties(prefix = "spring.datasource")
-	public DataSource dataSource(){
-	    return DataSourceBuilder.create().build();
+	public DataSource dataSource() {
+		return DataSourceBuilder.create().build();
 	}
-	
+
 	@Bean
 	@ConfigurationProperties(prefix = "job-repo.datasource")
 	@BatchDataSource
 	public DataSource jobRepoDataSource() {
-	    return DataSourceBuilder.create().build();
+		return DataSourceBuilder.create().build();
 	}
-	
-	
+
 	@Bean
 	public StatisticheFactory statisticheFactory() {
 		return new StatisticheFactory();
 	}
-	
-	
 
 }

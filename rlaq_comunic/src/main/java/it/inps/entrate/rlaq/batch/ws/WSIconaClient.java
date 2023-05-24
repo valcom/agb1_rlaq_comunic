@@ -8,15 +8,12 @@ import it.inps.soa.ws01317.GetRicevutePecResponse;
 import it.inps.soa.ws01317.InvioEmailExt;
 import it.inps.soa.ws01317.InvioEmailExtResponse;
 
-public class WSIconaClient extends WebServiceGatewaySupport{
-	
+public class WSIconaClient extends WebServiceGatewaySupport {
+
 	private WebServiceMessageCallback invioCallback;
-	
-	
 
 	private WebServiceMessageCallback getRicevutePecCallback;
-	
-	
+
 	public WebServiceMessageCallback getInvioCallback() {
 		return invioCallback;
 	}
@@ -33,16 +30,14 @@ public class WSIconaClient extends WebServiceGatewaySupport{
 		this.getRicevutePecCallback = getRicevutePecCallback;
 	}
 
-	
-	
 	public InvioEmailExtResponse invioPEC(InvioEmailExt request) {
-		
-		return (InvioEmailExtResponse) getWebServiceTemplate().marshalSendAndReceive(request,invioCallback);
-		 	
+
+		return (InvioEmailExtResponse) getWebServiceTemplate().marshalSendAndReceive(request, invioCallback);
+
 	}
 
 	public GetRicevutePecResponse getRicevutePEC(GetRicevutePec request) {
-		return (GetRicevutePecResponse) getWebServiceTemplate().marshalSendAndReceive(request,getRicevutePecCallback);
+		return (GetRicevutePecResponse) getWebServiceTemplate().marshalSendAndReceive(request, getRicevutePecCallback);
 	}
-	
+
 }

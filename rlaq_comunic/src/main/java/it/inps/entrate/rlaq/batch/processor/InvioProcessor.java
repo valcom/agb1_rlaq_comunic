@@ -17,24 +17,23 @@ import it.inps.soa.ws01317.InvioEmailExtResponse;
  *
  */
 public class InvioProcessor implements ItemProcessor<Notifica, Notifica> {
-	
+
 	@Autowired
 	private WSIconaClient wsIconaClient;
-	
+
 	@Autowired
-	private Converter<Notifica,InvioEmailExt> requestConverter;
-	
+	private Converter<Notifica, InvioEmailExt> requestConverter;
+
 	@Autowired
-	private Converter<InvioEmailExtResponse,Notifica> responseConverter;
+	private Converter<InvioEmailExtResponse, Notifica> responseConverter;
 
 	@Override
 	public Notifica process(Notifica notifica) throws Exception {
 
-		
 		InvioEmailExt request = requestConverter.convert(notifica);
-	
+
 		InvioEmailExtResponse response = wsIconaClient.invioPEC(request);
-		
+
 		return responseConverter.convert(response);
 	}
 

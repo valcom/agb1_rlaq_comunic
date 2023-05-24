@@ -11,7 +11,8 @@ public class StatisticheFactory {
 		statistiche.setName(jobExecution.getJobInstance().getJobName());
 		statistiche.setDataInizio(jobExecution.getStartTime());
 		statistiche.setDataFine(jobExecution.getEndTime());
-		statistiche.setStatisticheStep(jobExecution.getStepExecutions().stream().map(this::getStatisticheStep).toList());
+		statistiche
+				.setStatisticheStep(jobExecution.getStepExecutions().stream().map(this::getStatisticheStep).toList());
 
 		return statistiche;
 	}

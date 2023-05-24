@@ -16,15 +16,14 @@ import it.inps.entrate.rlaq.batch.repository.ConfigRepository;
  *
  */
 public class StepExecutionDecider implements JobExecutionDecider {
-	
+
 	@Autowired
 	private ConfigRepository configRepository;
-	
+
 	public enum StepDecision {
-		ENABLED,DISABLED
+		ENABLED, DISABLED
 	}
 
-	
 	private String property;
 
 	public String getProperty() {
@@ -40,7 +39,8 @@ public class StepExecutionDecider implements JobExecutionDecider {
 		String valore = configRepository.findValoreByChiave(property);
 		boolean decision = Boolean.parseBoolean(valore);
 
-		return decision ? new FlowExecutionStatus(StepDecision.ENABLED.name()):new FlowExecutionStatus(StepDecision.DISABLED.name());
+		return decision ? new FlowExecutionStatus(StepDecision.ENABLED.name())
+				: new FlowExecutionStatus(StepDecision.DISABLED.name());
 
 	}
 

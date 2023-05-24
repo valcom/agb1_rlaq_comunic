@@ -16,46 +16,45 @@ import it.inps.entrate.rlaq.batch.ws.WSIconaClient;
 @Configuration
 public class WsConfig {
 
-	
 	@Bean
-	public WSIconaClient wsiconaClient(@Value("${ws.icona.url}")String url) {
-		Jaxb2Marshaller marshaller =  new Jaxb2Marshaller();
+	public WSIconaClient wsiconaClient(@Value("${ws.icona.url}") String url) {
+		Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
 		marshaller.setContextPath("it.inps.soa.ws01317");
-	        
-	       
+
 		WSIconaClient client = new WSIconaClient();
-	        client.setDefaultUri(url);
-	        client.setMarshaller(marshaller);
-			client.setUnmarshaller(marshaller);
-			client.setInvioCallback(invioCallback());
-			client.setGetRicevutePecCallback(getRicevutePecCallback());
-	        return client;
-		
+		client.setDefaultUri(url);
+		client.setMarshaller(marshaller);
+		client.setUnmarshaller(marshaller);
+		client.setInvioCallback(invioCallback());
+		client.setGetRicevutePecCallback(getRicevutePecCallback());
+		return client;
+
 	}
-	
+
 	@Bean
 	public HeaderAdder<Identity> identityHeader() {
 		return new HeaderAdder<>(identity());
 	}
-	
+
 	@Bean
 	@ConfigurationProperties(prefix = "ws.identity")
 	public Identity identity() {
 		return new it.inps.ObjectFactory().createIdentity();
 	}
-	
-	
+
 	@Bean
 	public WebServiceMessageCallback invioCallback() {
-		
-		return new CompositeMsgCallback(new SoapActionCallback("http://soa.inps.it/WS01317/IWSIcona20/InvioEmailExt"),identityHeader());
-		
+
+		return new CompositeMsgCallback(new SoapActionCallback("http://soa.inps.it/WS01317/IWSIcona20/InvioEmailExt"),
+				identityHeader());
+
 	}
-	
+
 	@Bean
 	public WebServiceMessageCallback getRicevutePecCallback() {
-		
-		return new CompositeMsgCallback(new SoapActionCallback("http://soa.inps.it/WS01317/IWSIcona20/GetRicevutePec"),identityHeader());
+
+		return new CompositeMsgCallback(new SoapActionCallback("http://soa.inps.it/WS01317/IWSIcona20/GetRicevutePec"),
+				identityHeader());
 
 	}
 }

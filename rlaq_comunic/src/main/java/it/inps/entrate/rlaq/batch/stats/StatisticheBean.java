@@ -2,7 +2,6 @@ package it.inps.entrate.rlaq.batch.stats;
 
 import java.time.temporal.Temporal;
 
-
 public abstract class StatisticheBean {
 	/**
 	 * 
@@ -10,9 +9,8 @@ public abstract class StatisticheBean {
 
 	private Temporal dataInizio;
 	private Temporal dataFine;
-	
+
 	private String name;
-	
 
 	public String getName() {
 		return name;
@@ -37,9 +35,5 @@ public abstract class StatisticheBean {
 	public void setDataFine(Temporal dataFine) {
 		this.dataFine = dataFine;
 	}
-
-
-
-
 
 }

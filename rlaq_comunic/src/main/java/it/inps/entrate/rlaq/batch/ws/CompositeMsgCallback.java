@@ -8,7 +8,7 @@ import org.springframework.ws.WebServiceMessage;
 import org.springframework.ws.client.core.WebServiceMessageCallback;
 
 public class CompositeMsgCallback implements WebServiceMessageCallback {
-	
+
 	private WebServiceMessageCallback[] delegates;
 
 	public CompositeMsgCallback(WebServiceMessageCallback... delegates) {
@@ -18,12 +18,12 @@ public class CompositeMsgCallback implements WebServiceMessageCallback {
 
 	@Override
 	public void doWithMessage(WebServiceMessage message) throws IOException, TransformerException {
-		if(delegates !=null) {
-			for (WebServiceMessageCallback d: delegates) {
+		if (delegates != null) {
+			for (WebServiceMessageCallback d : delegates) {
 				d.doWithMessage(message);
 			}
 		}
-		
+
 	}
 
 }

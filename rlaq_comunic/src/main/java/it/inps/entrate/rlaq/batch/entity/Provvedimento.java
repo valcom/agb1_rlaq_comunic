@@ -8,11 +8,11 @@ package it.inps.entrate.rlaq.batch.entity;
  *
  */
 public class Provvedimento {
-	
+
 	private Long idProvvedimento;
-	
+
 	private Long idDomanda;
-	
+
 	private String cfAzienda;
 
 	public Long getIdProvvedimento() {
@@ -39,6 +39,4 @@ public class Provvedimento {
 		this.cfAzienda = cfAzienda;
 	}
 
-	
-	
 }

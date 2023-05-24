@@ -12,12 +12,12 @@ import it.inps.entrate.rlaq.batch.entity.Provvedimento;
  * @author vcompagnone01
  *
  */
-public class PreparazioneNotificaProvvedimentoProcessor implements ItemProcessor<Provvedimento, Notifica>{
+public class PreparazioneNotificaProvvedimentoProcessor implements ItemProcessor<Provvedimento, Notifica> {
 
 	@Override
 	public Notifica process(Provvedimento item) throws Exception {
 		return null;
-		
+
 	}
 
 }

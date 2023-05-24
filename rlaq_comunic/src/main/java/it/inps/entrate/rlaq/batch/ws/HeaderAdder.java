@@ -14,26 +14,26 @@ import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
 
 public class HeaderAdder<T> implements WebServiceMessageCallback {
-    
-    private T header;
 
-    public HeaderAdder(T header) {
-        this.header = header;
-    }
+	private T header;
 
-    @Override
-    public void doWithMessage(WebServiceMessage message) throws IOException, TransformerException {
-        SoapHeader soapHeader = ((SoapMessage)message).getSoapHeader();
+	public HeaderAdder(T header) {
+		this.header = header;
+	}
 
-        try {
-            JAXBContext context = JAXBContext.newInstance(header.getClass());
+	@Override
+	public void doWithMessage(WebServiceMessage message) throws IOException, TransformerException {
+		SoapHeader soapHeader = ((SoapMessage) message).getSoapHeader();
 
-            Marshaller marshaller = context.createMarshaller();
-            marshaller.marshal(header, soapHeader.getResult());
+		try {
+			JAXBContext context = JAXBContext.newInstance(header.getClass());
 
-        } catch (JAXBException e) {
-            throw new IOException("error while marshalling identity.",e);
-        }
-    }
-    
+			Marshaller marshaller = context.createMarshaller();
+			marshaller.marshal(header, soapHeader.getResult());
+
+		} catch (JAXBException e) {
+			throw new IOException("error while marshalling header.", e);
+		}
+	}
+
 }
