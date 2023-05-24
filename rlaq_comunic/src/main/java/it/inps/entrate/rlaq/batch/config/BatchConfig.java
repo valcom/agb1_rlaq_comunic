@@ -2,6 +2,7 @@ package it.inps.entrate.rlaq.batch.config;
 
 import javax.sql.DataSource;
 
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.springframework.boot.autoconfigure.batch.BatchDataSource;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
@@ -18,14 +19,14 @@ public class BatchConfig {
 	@Primary
 	@ConfigurationProperties(prefix = "spring.datasource")
 	public DataSource dataSource() {
-		return DataSourceBuilder.create().build();
+		return DataSourceBuilder.create().type(BasicDataSource.class).build();
 	}
 
 	@Bean
 	@ConfigurationProperties(prefix = "job-repo.datasource")
 	@BatchDataSource
 	public DataSource jobRepoDataSource() {
-		return DataSourceBuilder.create().build();
+		return DataSourceBuilder.create().type(BasicDataSource.class).build();
 	}
 
 	@Bean
