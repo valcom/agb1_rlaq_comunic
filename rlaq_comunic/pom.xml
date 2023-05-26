@@ -61,12 +61,6 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
 		</dependency>
-       
-		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-dbcp2 -->
-<dependency>
-    <groupId>org.apache.commons</groupId>
-    <artifactId>commons-dbcp2</artifactId>
-</dependency>
 
 	
 		<dependency>
@@ -81,7 +75,8 @@
         <resource>
             <directory>src/main/resources</directory>
             <excludes>
-                <exclude>*.properties</exclude>
+                <exclude>config.properties</exclude>
+                <exclude>log4j2-spring.xml</exclude>
             </excludes>
             <filtering>false</filtering>
         </resource>
