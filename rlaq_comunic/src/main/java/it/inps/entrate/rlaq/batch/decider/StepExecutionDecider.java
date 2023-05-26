@@ -3,6 +3,8 @@
  */
 package it.inps.entrate.rlaq.batch.decider;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.job.flow.FlowExecutionStatus;
@@ -16,6 +18,8 @@ import it.inps.entrate.rlaq.batch.repository.ConfigRepository;
  *
  */
 public class StepExecutionDecider implements JobExecutionDecider {
+
+	private static final Logger log = LoggerFactory.getLogger(StepExecutionDecider.class);
 
 	@Autowired
 	private ConfigRepository configRepository;
@@ -37,10 +41,11 @@ public class StepExecutionDecider implements JobExecutionDecider {
 	@Override
 	public FlowExecutionStatus decide(JobExecution jobExecution, StepExecution stepExecution) {
 		String valore = configRepository.findValoreByChiave(property);
-		boolean decision = Boolean.parseBoolean(valore);
-
-		return decision ? new FlowExecutionStatus(StepDecision.ENABLED.name())
-				: new FlowExecutionStatus(StepDecision.DISABLED.name());
+		if (log.isDebugEnabled()) {
+			log.debug("{} = {}", property, valore);
+		}
+		StepDecision decision = Boolean.parseBoolean(valore) ? StepDecision.ENABLED : StepDecision.DISABLED;
+		return new FlowExecutionStatus(decision.name());
 
 	}
 
