@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+	<Appenders>
+		<Console name="stdout" target="SYSTEM_OUT">
+			<PatternLayout pattern="[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c:%L - %msg%n" />
+		</Console>
+			<JDBC name="db" tableName="dbo.RLAQ_EVENT_LOGS">
+			
+			<ConnectionFactory class="it.inps.entrate.rlaq.batch.log.LogsStoreConnectionFactory" method="getConnection" />
+                                
+			<Column name="DATE_TIME" isEventTimestamp="true" />
+			<Column name="THREAD" pattern="%t" />
+			<Column name="CLASS" pattern="%logger" />
+			<Column name="LEVEL" pattern="%level" />
+			<Column name="MESSAGE" pattern="%message" />
+			<Column name="EXCEPTION" pattern="%ex{full}" isClob="true"/>
+		</JDBC>
+		
+		<Async name="asyncDB">
+      		<AppenderRef ref="db"/>
+    	</Async>
+	</Appenders>
+	
+
+	<Loggers>
+		<logger name="org.springframework.ws.client.MessageTracing" level="trace" additivity="false">
+	      	<AppenderRef ref="stdout" />
+			<AppenderRef ref="db" />
+	    </logger>
+	   
+	   <logger name="org.springframework.batch.item.database" level="debug" additivity="false">
+	     	<AppenderRef ref="stdout" />
+			<AppenderRef ref="db" />
+	    </logger>
+	   
+	   <logger name="it.inps.entrate.rlaq" level="debug" additivity="false">
+	     	<AppenderRef ref="stdout" />
+			<AppenderRef ref="db" />
+	    </logger>
+	
+		<Root level="error">
+			<AppenderRef ref="stdout" />
+			<AppenderRef ref="asyncDB" />
+		</Root>
+	</Loggers>
+
+</Configuration>
